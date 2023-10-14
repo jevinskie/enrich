@@ -43,7 +43,10 @@ def test_console_soft_wrap() -> None:
     )
     text = 21 * "x"
     console.print(text, end="")
-    assert console.file.getvalue() == text  # type: ignore
+    assert (
+        console.file.getvalue()  # type: ignore[attr-defined] # pylint: disable=no-member
+        == text
+    )
     result = console.export_text()
     assert text in result
 
