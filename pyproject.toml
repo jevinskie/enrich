@@ -40,12 +40,12 @@ classifiers = [
   "Topic :: Utilities",
 ]
 keywords = ["console", "logging", "rich"]
-dependencies = ["rich >= 9.5.1, < 12.5.0"]
+dependencies = ["rich >= 9.5.1"]
 
 [project.urls]
-homepage = "https://github.com/pycontribs/enrich"
-repository = "https://github.com/pycontribs/enrich"
-changelog = "https://github.com/pycontribs/enrich/releases"
+homepage = "https://github.com/jevinskie/enrich"
+repository = "https://github.com/jevinskie/enrich"
+changelog = "https://github.com/jevinskie/enrich/releases"
 
 [project.optional-dependencies]
 test = [

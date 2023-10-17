@@ -1,11 +1,38 @@
 """Module that helps integrating with rich library."""
 import os
 import sys
-from typing import Any, TextIO
+from typing import Any, TextIO, Optional, Self
 
 import rich.console as rich_console
+from rich import inspect as rinspect
+from rich import print as rprint
 from rich.ansi import AnsiDecoder
-from rich.file_proxy import FileProxy
+# from rich.file_proxy import FileProxy
+from .file_proxy import FileProxy
+
+
+class OriginalStdioSingleton:
+    _instance: Optional[Self] = None
+    _stdout: Optional[TextIO] = None
+    _stderr: Optional[TextIO] = None
+    
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._stdout = sys.stdout
+            cls._stderr = sys.stderr
+            cls._instance = super(OriginalStdioSingleton, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    @property
+    def stdout(self):
+        return self._stdout
+
+    @property
+    def stderr(self):
+        return self._stderr
+
+
+OriginalStdioSingleton()
 
 
 class Console(rich_console.Console):
@@ -30,12 +57,91 @@ class Console(rich_console.Console):
 
         super().__init__(*args, **kwargs)
         self.extended = True
+        self.debug_file = open(
+            "/Users/jevin/code/python/git/enrich/fart2.txt", "w", encoding="utf-8",
+        )
+        # rprint(self, file=self.debug_file)
+        # rprint("\n\n!!!\n\n", file=self.debug_file)
+        # if self._file:
+        #     f3 = self._file
+        #     rprint("using self._file", file=self.debug_file)
+        # elif self.stderr:
+        #     f3 = sys.stderr
+        #     rprint("using sys.stderr", file=self.debug_file)
+        # else:
+        #     f3 = sys.stdout
+        #     rprint("using sys.stdout", file=self.debug_file)
+        # rprint(
+        #     f"f3 getattr rich_proxied_file: {getattr(f3, 'rich_proxied_file', 'foobar')}",
+        #     file=self.debug_file,
+        # )
+        # rprint("\n\n!!!\n\n", file=self.debug_file)
+        # rc = rich_console.Console(file=self.debug_file)
+        # rinspect(self.file, console=rc, all=True)
+        # rprint("\n\n!!!\n\n", file=self.debug_file)
+        # rinspect(self, console=rc, all=True)
 
+        print(f"new pre _file: {self._file} file id: {id(self.file)} stdout id: {id(sys.stdout)} stderr id: {id(sys.stderr)}", file=self.debug_file)
+        self.debug_file.flush()
+
+        self._orig_stdout = None
+        self._orig_stderr = None
+        self._in_check_buffer = False
         if self.redirect:
             if not hasattr(sys.stdout, "rich_proxied_file"):
-                sys.stdout = FileProxy(self, sys.stdout)  # type: ignore
+                self._orig_stdout = OriginalStdioSingleton().stdout
+                sys.stdout = FileProxy(self, self._orig_stdout)  # type: ignore
             if not hasattr(sys.stderr, "rich_proxied_file"):
-                sys.stderr = FileProxy(self, sys.stderr)  # type: ignore
+                self._orig_stderr = OriginalStdioSingleton().stderr
+                sys.stderr = FileProxy(self, self._orig_stderr)  # type: ignore
+
+        print(f"new post _file: {self._file} file id: {id(self.file)} stdout id: {id(sys.stdout)} stderr id: {id(sys.stderr)} orig_stdout id: {id(self._orig_stdout)} orig_stderr id: {id(self._orig_stderr)}", file=self.debug_file)
+
+        # print(sys.stdout.rich_proxied_file)
+        # assert hasattr(sys.stdout, "rich_proxied_file")
+
+    # def _check_buffer(self) -> None:
+    #     print(f"new _check_buffer redirect: {self.redirect} record: {self.record} _file: {self._file} file id: {id(self.file)} stdout id: {id(sys.stdout)} stderr id: {id(sys.stderr)} orig_stdout id: {id(self._orig_stdout)} orig_stderr id: {id(self._orig_stderr)}", file=self.debug_file)
+    #     self.debug_file.flush()
+    #     # if self.redirect and self.record:
+    #     #     file = self.file
+    #     #     if (hasattr(self, "_orig_stdout") and file is self._orig_stdout) or (hasattr(self, "_orig_stderr") and hasattr(self, "orig_stderr") and file is self._orig_stderr):
+    #     #         # assert False and "bailing out"
+    #     #         return
+    #     if self.redirect and self.record:
+    #         file = self.file
+    #         if (hasattr(self, "_orig_stdout") and file is self._orig_stdout) or (hasattr(self, "_orig_stderr") and hasattr(self, "orig_stderr") and file is self._orig_stderr):
+    #             # assert False and "bailing out"
+    #             return
+    #     super()._check_buffer()
+
+    # def _check_buffer(self) -> None:
+    #     if self.redirect and self.record:
+    #         # self.record = False
+    #         super()._check_buffer()
+    #         # self.record = True
+    #     else:
+    #         super._check_buffer()
+
+    def _check_buffer(self) -> None:
+        self._in_check_buffer = True
+        super()._check_buffer()
+        self._in_check_buffer = False
+        # if self.redirect and self.record:
+        #     # self.record = False
+        #     super()._check_buffer()
+        #     # self.record = True
+        # else:
+        #     super._check_buffer()
+
+    # @property
+    # def record(self) -> bool:
+    #     file = self.file
+    #     print(f"new record file id {id(file)}", file=self.debug_file)
+    #     if file in (self._orig_stdout, self._orig_stderr):
+    #         print("new record returning False", file=self.debug_file)
+    #         return False
+    #     return super().record
 
     # https://github.com/python/mypy/issues/4441
     def print(self, *args, **kwargs) -> None:  # type: ignore

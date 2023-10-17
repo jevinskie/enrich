@@ -20,6 +20,11 @@ def test_rich_console_ex() -> None:
     # streams, notable example being click.
     # sys.stdout.write(b"epsilon\n")  # type: ignore
     text = console.export_text()
+    # with open(
+    #     "/Users/jevin/code/python/enrich/fart.txt", "w", encoding="utf-8"
+    # ) as fart:
+    #     fart.write(text)
+    #     fart.write("\n!!!\n" + text.encode().hex() + "\n!!!\n")
     assert text == "alpha\nbeta\ngamma\ndelta\n"
 
 
