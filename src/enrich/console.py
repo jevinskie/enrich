@@ -1,7 +1,7 @@
 """Module that helps integrating with rich library."""
 import os
 import sys
-from typing import Any, TextIO, Optional, Self
+from typing import Any, TextIO, Optional, Self, IO
 
 import rich.console as rich_console
 from rich import inspect as rinspect
@@ -9,6 +9,7 @@ from rich import print as rprint
 from rich.ansi import AnsiDecoder
 # from rich.file_proxy import FileProxy
 from .file_proxy import FileProxy
+from rich._null_file import NULL_FILE
 
 
 class OriginalStdioSingleton:
@@ -81,12 +82,13 @@ class Console(rich_console.Console):
         # rprint("\n\n!!!\n\n", file=self.debug_file)
         # rinspect(self, console=rc, all=True)
 
-        print(f"new pre _file: {self._file} file id: {id(self.file)} stdout id: {id(sys.stdout)} stderr id: {id(sys.stderr)}", file=self.debug_file)
-        self.debug_file.flush()
-
         self._orig_stdout = None
         self._orig_stderr = None
         self._in_check_buffer = False
+
+        print(f"new pre _file: {self._file} file id: {id(self.file)} stdout id: {id(sys.stdout)} stderr id: {id(sys.stderr)}", file=self.debug_file)
+        self.debug_file.flush()
+
         if self.redirect:
             if not hasattr(sys.stdout, "rich_proxied_file"):
                 self._orig_stdout = OriginalStdioSingleton().stdout
@@ -133,6 +135,19 @@ class Console(rich_console.Console):
         #     # self.record = True
         # else:
         #     super._check_buffer()
+
+    @property
+    def file(self) -> IO[str]:
+        f = super().file
+        if self.redirect and hasattr(self, "_in_check_buffer") and self._in_check_buffer:
+            print(f"new _file special", file=self.debug_file)
+            self.debug_file.flush()
+            return NULL_FILE
+        else:
+            print(f"new _file normal", file=self.debug_file)
+            self.debug_file.flush()
+            return f
+
 
     # @property
     # def record(self) -> bool:

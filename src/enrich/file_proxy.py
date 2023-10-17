@@ -34,16 +34,16 @@ class FileProxy(rich_file_proxy.FileProxy):
     #         print("new proxy flush normal", file=self.debug_file)
     #         return super().flush()
 
-    @property
-    def rich_proxied_file(self) -> IO[str]:
-        if hasattr(self.__console, "_in_check_buffer") and self.__console._in_check_buffer:
-            print("new proxy rich_proxied_file special", file=self.debug_file)
-            self.debug_file.flush()
-            return NULL_FILE
-        else:
-            print("new proxy rich_proxied_file normal", file=self.debug_file)
-            self.debug_file.flush()
-            return super().file
+    # @property
+    # def rich_proxied_file(self) -> IO[str]:
+    #     if hasattr(self.__console, "_in_check_buffer") and self.__console._in_check_buffer:
+    #         print("new proxy rich_proxied_file special", file=self.debug_file)
+    #         self.debug_file.flush()
+    #         return NULL_FILE
+    #     else:
+    #         print("new proxy rich_proxied_file normal", file=self.debug_file)
+    #         self.debug_file.flush()
+    #         return super().file
 
     # def write(self, text: str) -> int:
     #     if hasattr(self.__console, "_in_check_buffer") and self.__console._in_check_buffer:
